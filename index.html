@@ -5,79 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guía de Votación Interactiva - Asamblea</title>
     <style>
-        /* Forzar tamaño carta y márgenes mínimos para 1 hoja */
-        @page { size: letter portrait; margin: 0.3cm 0.4cm; } 
+        /* --- CONFIGURACIÓN PARA IMPRESIÓN (1 HOJA) --- */
+        @page { size: letter portrait; margin: 0.2cm 0.4cm; } /* Márgenes aún más ajustados */
         
+        /* --- ESTILOS BASE (MÓVIL / WEB) --- */
         body { 
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
             color: #333; 
-            line-height: 1.1; 
+            line-height: 1.3; 
             margin: 0; 
             padding: 0; 
-            font-size: 9.5px; /* Letra un punto más grande */
+            font-size: 13px; 
             background-color: #e2e8f0; 
         } 
 
         .contenedor-principal {
-            max-width: 980px;
-            margin: 10px auto; 
+            max-width: 1000px;
+            margin: 20px auto; 
             background-color: white;
-            padding: 15px; 
+            padding: 25px; 
             box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+            border-radius: 8px;
         }
 
-        .btn-container { display: flex; gap: 10px; margin-bottom: 8px; }
-
-        .btn-accion {
-            flex: 1; padding: 6px; color: white; text-align: center; font-size: 11px;
-            font-weight: bold; border: none; border-radius: 5px; cursor: pointer; transition: background 0.3s;
+        /* --- AVISO LEGAL (Solo Web, Letra Grande) --- */
+        .aviso-legal {
+            background-color: #f8f9fa;
+            border: 1px solid #cbd5e0;
+            border-left: 5px solid #718096;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 12px; 
+            color: #4a5568;
+            text-align: justify;
+            line-height: 1.4;
+            border-radius: 4px;
         }
 
-        .btn-imprimir { background-color: #1a365d; }
-        .btn-imprimir:hover { background-color: #2b6cb0; }
-
-        .btn-pdf { background-color: #2b6cb0; }
-        .btn-pdf:hover { background-color: #1a365d; }
-        
         .oculto { display: none !important; }
 
-        .header { text-align: center; border-bottom: 2px solid #1a365d; padding-bottom: 2px; margin-bottom: 4px; }
-        .header h1 { margin: 0; font-size: 15px; color: #1a365d; text-transform: uppercase; }
-        .header p { margin: 1px 0 0 0; font-size: 10px; color: #555; font-weight: bold; }
-        .instructions { background-color: #f0f4f8; padding: 3px 5px; border-radius: 3px; margin-bottom: 4px; font-size: 9px; border-left: 3px solid #2b6cb0; }
+        .header { text-align: center; border-bottom: 2px solid #1a365d; padding-bottom: 10px; margin-bottom: 15px; }
+        .header h1 { margin: 0; font-size: 22px; color: #1a365d; text-transform: uppercase; }
+        .header p { margin: 5px 0 0 0; font-size: 14px; color: #555; font-weight: bold; }
         
-        table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
-        th { background-color: #1a365d; color: white; text-align: left; padding: 2px 4px; font-size: 10px; border: 1px solid #1a365d; }
-        td { border: 1px solid #cbd5e0; padding: 3px 4px; vertical-align: top; }
+        .instructions { background-color: #f0f4f8; padding: 10px 15px; border-radius: 5px; margin-bottom: 15px; font-size: 13px; border-left: 4px solid #2b6cb0; }
+        
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        th { background-color: #1a365d; color: white; text-align: left; padding: 10px; font-size: 14px; border: 1px solid #1a365d; }
+        td { border: 1px solid #cbd5e0; padding: 10px; vertical-align: top; }
         
         .topic-col { width: 38%; background-color: #f7fafc; }
-        .topic-title { font-weight: bold; font-size: 10px; color: #1a365d; display: block; margin-bottom: 1px; }
-        .topic-desc { font-size: 8.5px; color: #4a5568; display: block; line-height: 1.1; }
-        .topic-cost { font-weight: bold; color: #b7791f; font-size: 9px; display: block; margin-top: 1px; }
+        .topic-title { font-weight: bold; font-size: 14px; color: #1a365d; display: block; margin-bottom: 4px; }
+        .topic-desc { font-size: 12px; color: #4a5568; display: block; line-height: 1.2; }
+        .topic-cost { font-weight: bold; color: #b7791f; font-size: 13px; display: block; margin-top: 4px; }
         
         .vote-option { 
-            display: flex; align-items: flex-start; margin-bottom: 3px; cursor: pointer; 
-            transition: all 0.2s ease-in-out; padding: 1px; border-radius: 3px;
+            display: flex; align-items: flex-start; margin-bottom: 8px; cursor: pointer; 
+            transition: all 0.2s ease-in-out; padding: 4px; border-radius: 4px;
         }
         
-        .vote-option.seleccionado { background-color: rgba(0,0,0,0.03); }
-        .vote-option.seleccionado .option-text { font-size: 10px; font-weight: bold; color: #000; }
+        .vote-option:hover { background-color: #f0f4f8; }
+        .vote-option.seleccionado { background-color: rgba(0,0,0,0.05); }
+        .vote-option.seleccionado .option-text { font-weight: bold; color: #000; }
         
-        /* Casillas en pantalla (Web) */
         .checkbox-btn {
-            width: 14px; height: 14px; border: 1.5px solid #4a5568; border-radius: 3px;
-            margin-right: 5px; flex-shrink: 0; display: inline-flex; align-items: center;
+            width: 22px; height: 22px; border: 2px solid #4a5568; border-radius: 4px;
+            margin-right: 10px; flex-shrink: 0; display: inline-flex; align-items: center;
             justify-content: center; color: transparent;
             transition: all 0.2s; user-select: none; background-color: white;
         }
         
         .checkbox-btn.selected.a-favor { background-color: #38a169; border-color: #38a169; color: white; }
-        .checkbox-btn.selected.a-favor::after { content: "✓"; font-size: 13px; font-weight: 900; line-height: 1; }
+        .checkbox-btn.selected.a-favor::after { content: "✓"; font-size: 18px; font-weight: 900; line-height: 1; }
         
         .checkbox-btn.selected.en-contra { background-color: #e53e3e; border-color: #e53e3e; color: white; }
-        .checkbox-btn.selected.en-contra::after { content: "✗"; font-size: 13px; font-weight: 900; line-height: 1; }
+        .checkbox-btn.selected.en-contra::after { content: "✗"; font-size: 18px; font-weight: 900; line-height: 1; }
 
-        .option-text { flex-grow: 1; font-size: 9.5px; line-height: 1.15; transition: font-size 0.2s; }
+        .option-text { flex-grow: 1; font-size: 13px; line-height: 1.3; transition: font-size 0.2s; }
         .option-text strong { color: #1a365d; }
         .option-against .option-text { color: #9b2c2c; }
 
@@ -86,17 +90,16 @@
         
         input[type="text"] {
             border: none; border-bottom: 1px dashed #999; background: transparent;
-            font-family: inherit; font-size: 9px; color: #333; width: 40px;
-            text-align: center; margin: 0 1px;
+            font-family: inherit; font-size: 13px; color: #333; width: 60px;
+            text-align: center; margin: 0 2px;
         }
-        input[type="text"]:focus { outline: none; border-bottom: 1px solid #2b6cb0; }
+        input[type="text"]:focus { outline: none; border-bottom: 2px solid #2b6cb0; }
 
-        /* Área de firmas */
         .signature-area { 
             display: flex; 
             justify-content: space-between; 
-            margin-top: 15px; 
-            padding-top: 10px; 
+            margin-top: 30px; 
+            padding-top: 15px; 
         }
         
         .signature-box { 
@@ -108,26 +111,23 @@
         
         .signature-input {
             width: 100%;
-            min-height: 20px; 
+            min-height: 35px; 
             border: none;
-            border-bottom: 1.5px solid #333;
+            border-bottom: 2px solid #333;
             background: transparent;
             font-family: inherit;
-            font-size: 14px;
+            font-size: 18px;
             color: #333;
             text-align: center;
-            margin-bottom: 4px;
-            padding: 3px;
+            margin-bottom: 8px;
+            padding: 5px;
             white-space: nowrap; 
             overflow: visible;
             outline: none;
             box-sizing: border-box; 
         }
 
-        .signature-input:focus {
-            border-bottom: 2px solid #2b6cb0;
-            background-color: #f7fafc;
-        }
+        .signature-input:focus { border-bottom: 3px solid #2b6cb0; background-color: #f7fafc; }
 
         .signature-input:empty::before {
             content: attr(data-placeholder);
@@ -136,77 +136,69 @@
             display: block; 
         }
 
-        .signature-label { 
-            font-size: 10px; 
-            color: #555; 
-            font-weight: bold; 
-            text-align: center;
+        .signature-label { font-size: 13px; color: #555; font-weight: bold; text-align: center; }
+
+        .btn-container { display: flex; justify-content: center; margin-top: 20px; margin-bottom: 20px; }
+        .btn-accion {
+            padding: 12px 30px; color: white; text-align: center; font-size: 14px;
+            font-weight: bold; border: none; border-radius: 5px; cursor: pointer; background-color: #1a365d; transition: background 0.3s;
+        }
+        .btn-accion:hover { background-color: #2b6cb0; }
+
+        .nota-importante {
+            background-color: #fffaf0; border: 1px solid #ecc94b; padding: 12px;
+            margin-top: 15px; font-size: 11px; color: #744210; border-radius: 6px; font-weight: bold; text-align: justify;
         }
 
-        .legal-footer { margin-top: 5px; padding-top: 3px; border-top: 1px dashed #cbd5e0; font-size: 7px; color: #555; text-align: justify; line-height: 1.1; }
-        
-        .nota-importante {
-            background-color: #fffaf0; border: 1px solid #ecc94b; padding: 4px;
-            margin-top: 5px; font-size: 8px; color: #744210; border-radius: 4px; font-weight: bold; text-align: justify;
-        }
+        .legal-footer { margin-top: 15px; padding-top: 10px; border-top: 1px dashed #cbd5e0; font-size: 10px; color: #555; text-align: justify; line-height: 1.3; }
 
         tr { page-break-inside: avoid; }
         
-        /* --- REGLAS EXCLUSIVAS PARA IMPRESIÓN (PDF) --- */
+        /* --- REGLAS EXCLUSIVAS PARA IMPRESIÓN (PDF EN 1 HOJA) --- */
         @media print { 
             body { 
                 background-color: white; 
-                font-size: 9.5px;
+                font-size: 10px; /* Reducción extra de 0.5px */
+                line-height: 1.1;
             }
             .contenedor-principal { 
                 max-width: 100%; 
                 margin: 0; 
                 padding: 0; 
                 box-shadow: none; 
+                border-radius: 0;
             }
-            .btn-container { display: none !important; } 
+            .no-print { display: none !important; } 
             
-            /* Forzar quitar fondos de color en las casillas al imprimir */
-            .checkbox-btn {
-                background-color: transparent !important;
-                border-color: #333 !important;
-                color: transparent;
-            }
+            .header { margin-bottom: 4px; padding-bottom: 2px; }
+            .header h1 { font-size: 15px; }
+            .header p { font-size: 10px; }
+            .instructions { display: none; }
             
-            /* Hacer las palomitas y taches negros sin fondo */
-            .checkbox-btn.selected.a-favor { 
-                background-color: transparent !important; 
-                border-color: #333 !important; 
-                color: #000 !important; 
-            }
-            .checkbox-btn.selected.en-contra { 
-                background-color: transparent !important; 
-                border-color: #333 !important; 
-                color: #000 !important; 
-            }
+            table { margin-bottom: 4px; }
+            th { padding: 2px 4px; font-size: 10px; }
+            td { padding: 3px 5px; } 
+            .topic-title { font-size: 10px; margin-bottom: 1px; }
+            .topic-desc { font-size: 9px; line-height: 1.05; }
+            .topic-cost { font-size: 9.5px; margin-top: 1px; }
             
-            /* Palomita y tache en Bold negro */
-            .checkbox-btn.selected.a-favor::after { 
-                content: "✓"; 
-                font-size: 15px; 
-                font-weight: 900; 
-                color: #000; 
-            }
-            .checkbox-btn.selected.en-contra::after { 
-                content: "✗"; 
-                font-size: 15px; 
-                font-weight: 900; 
-                color: #000; 
-            }
+            .vote-option { margin-bottom: 1px; padding: 1px; } /* Espacio vertical optimizado */
+            .checkbox-btn { width: 13px; height: 13px; border-width: 1.5px; margin-right: 4px; }
+            .option-text { font-size: 10px; line-height: 1.1; }
             
-            /* Asegurar que los textos no se corten */
-            .vote-option.seleccionado .option-text {
-                font-size: 10px;
-            }
+            /* Quitar fondos de color en las casillas al imprimir */
+            .checkbox-btn { background-color: transparent !important; border-color: #333 !important; color: transparent; }
+            .checkbox-btn.selected.a-favor { background-color: transparent !important; border-color: #333 !important; color: #000 !important; }
+            .checkbox-btn.selected.en-contra { background-color: transparent !important; border-color: #333 !important; color: #000 !important; }
             
-            .signature-input {
-                border-bottom: 1.5px solid #000 !important;
-            }
+            .checkbox-btn.selected.a-favor::after { content: "✓"; font-size: 14px; font-weight: 900; color: #000; }
+            .checkbox-btn.selected.en-contra::after { content: "✗"; font-size: 14px; font-weight: 900; color: #000; }
+            
+            .signature-area { margin-top: 10px; padding-top: 5px; }
+            .signature-input { font-size: 13px; min-height: 20px; border-bottom: 1.5px solid #000 !important; padding: 2px; }
+            .signature-label { font-size: 9px; }
+            .nota-importante { padding: 4px; font-size: 8px; margin-top: 5px; }
+            .legal-footer { font-size: 7px; margin-top: 5px; }
         }
     </style>
 </head>
@@ -214,9 +206,14 @@
 
     <div class="contenedor-principal">
 
-        <div class="btn-container" id="action-buttons">
-            <button class="btn-accion btn-imprimir" onclick="window.print()">🖨️ Imprimir o Guardar PDF</button>
-            <button class="btn-accion btn-pdf" id="btnPreparar" onclick="prepararPDF()">⚙️ Preparar Notas Acrobat</button>
+        <!-- AVISO LEGAL (Oculto al imprimir) -->
+        <div class="aviso-legal no-print">
+            <strong>Aviso:</strong> este formato es una guía informativa sin datos personales de los condóminos. Se comparte desde una cuenta personal de GitHub únicamente para facilitar su descarga e impresión. No se recaban ni publican nombres, departamentos, porcentajes de indiviso ni firmas. Los montos y costos estimados que aparecen son cifras de proyectos y cotizaciones del condominio, no datos personales, y se incluyen solo para que la asamblea vote informada. Si prefiere no llenarlo en línea, imprima la versión en blanco y respóndala a mano; el formato en papel es idéntico y le servirá como referencia antes de la Asamblea.
+        </div>
+
+        <!-- BOTÓN AL PRINCIPIO (Oculto al imprimir) -->
+        <div class="btn-container no-print">
+            <button class="btn-accion" onclick="window.print()">🖨️ Imprimir o Guardar PDF</button>
         </div>
 
         <div class="header">
@@ -224,8 +221,8 @@
             <p>Fecha: ____ / ____ / 2026</p>
         </div>
 
-        <div class="instructions">
-            <strong>Instrucciones:</strong> Haga clic en las casillas para votar (Verde = A Favor, Rojo = No apruebo). En el Punto 2, al seleccionar un comité, los demás se tachan automáticamente; si quita todas las palomitas, se marcará la opción global de "No crear ninguno".
+        <div class="instructions no-print">
+            <strong>Instrucciones:</strong> Haga clic en las casillas para votar (Verde = A Favor, Rojo = No apruebo).
         </div>
 
         <table>
@@ -420,6 +417,11 @@
             <strong>Nota legal complementaria:</strong> Conforme a la Ley de Propiedad en Condominio de la CDMX, el derecho a voto es exclusivo para los condóminos que se encuentren al corriente en sus cuotas. Los condóminos morosos conservan su derecho a voz, pero no a voto (Art. 34 y 42, LPC-CDMX).
         </div>
 
+        <!-- BOTÓN AL FINAL (Oculto al imprimir) -->
+        <div class="btn-container no-print">
+            <button class="btn-accion" onclick="window.print()">🖨️ Imprimir o Guardar PDF</button>
+        </div>
+
     </div> 
 
     <script>
@@ -570,31 +572,6 @@
                     checkbox.classList.add('selected', 'en-contra');
                 }
                 element.classList.add('seleccionado');
-            }
-        }
-
-        function prepararPDF() {
-            var btn = document.getElementById('btnPreparar');
-            btn.classList.add('oculto');
-            try {
-                this.syncAnnotScan();
-                var annots = this.getAnnots();
-                if (annots != null) {
-                    for (var i in annots) {
-                        var annot = annots[i];
-                        if (annot.type == "Text") {
-                            var r = annot.rect;
-                            var width = r[2] - r[0];
-                            var height = r[3] - r[1];
-                            r[2] += width;
-                            r[1] -= height;
-                            annot.rect = r;
-                        }
-                    }
-                }
-                alert("✅ ¡Listo! Ahora presiona 'Imprimir o Guardar PDF' y guarda el archivo. Las notas adhesivas que agregues en Acrobat serán del doble de tamaño.");
-            } catch (e) {
-                alert("⚠️ Guarda este documento como PDF primero y ábrelo en Adobe Acrobat para agrandar las notas. Puedes usar el botón 'Imprimir o Guardar PDF'.");
             }
         }
     </script>
