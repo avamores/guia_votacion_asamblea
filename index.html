@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía de Votación Interactiva - Asamblea</title>
+    <style>
+        /* Forzar tamaño carta y márgenes mínimos para 1 hoja */
+        @page { size: letter portrait; margin: 0.3cm 0.4cm; } 
+        
+        body { 
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+            color: #333; 
+            line-height: 1.1; 
+            margin: 0; 
+            padding: 0; 
+            font-size: 9.5px; /* Letra un punto más grande */
+            background-color: #e2e8f0; 
+        } 
+
+        .contenedor-principal {
+            max-width: 980px;
+            margin: 10px auto; 
+            background-color: white;
+            padding: 15px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+        }
+
+        .btn-container { display: flex; gap: 10px; margin-bottom: 8px; }
+
+        .btn-accion {
+            flex: 1; padding: 6px; color: white; text-align: center; font-size: 11px;
+            font-weight: bold; border: none; border-radius: 5px; cursor: pointer; transition: background 0.3s;
+        }
+
+        .btn-imprimir { background-color: #1a365d; }
+        .btn-imprimir:hover { background-color: #2b6cb0; }
+
+        .btn-pdf { background-color: #2b6cb0; }
+        .btn-pdf:hover { background-color: #1a365d; }
+        
+        .oculto { display: none !important; }
+
+        .header { text-align: center; border-bottom: 2px solid #1a365d; padding-bottom: 2px; margin-bottom: 4px; }
+        .header h1 { margin: 0; font-size: 15px; color: #1a365d; text-transform: uppercase; }
+        .header p { margin: 1px 0 0 0; font-size: 10px; color: #555; font-weight: bold; }
+        .instructions { background-color: #f0f4f8; padding: 3px 5px; border-radius: 3px; margin-bottom: 4px; font-size: 9px; border-left: 3px solid #2b6cb0; }
+        
+        table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+        th { background-color: #1a365d; color: white; text-align: left; padding: 2px 4px; font-size: 10px; border: 1px solid #1a365d; }
+        td { border: 1px solid #cbd5e0; padding: 3px 4px; vertical-align: top; }
+        
+        .topic-col { width: 38%; background-color: #f7fafc; }
+        .topic-title { font-weight: bold; font-size: 10px; color: #1a365d; display: block; margin-bottom: 1px; }
+        .topic-desc { font-size: 8.5px; color: #4a5568; display: block; line-height: 1.1; }
+        .topic-cost { font-weight: bold; color: #b7791f; font-size: 9px; display: block; margin-top: 1px; }
+        
+        .vote-option { 
+            display: flex; align-items: flex-start; margin-bottom: 3px; cursor: pointer; 
+            transition: all 0.2s ease-in-out; padding: 1px; border-radius: 3px;
+        }
+        
+        .vote-option.seleccionado { background-color: rgba(0,0,0,0.03); }
+        .vote-option.seleccionado .option-text { font-size: 10px; font-weight: bold; color: #000; }
+        
+        /* Casillas en pantalla (Web) */
+        .checkbox-btn {
+            width: 14px; height: 14px; border: 1.5px solid #4a5568; border-radius: 3px;
+            margin-right: 5px; flex-shrink: 0; display: inline-flex; align-items: center;
+            justify-content: center; color: transparent;
+            transition: all 0.2s; user-select: none; background-color: white;
+        }
+        
+        .checkbox-btn.selected.a-favor { background-color: #38a169; border-color: #38a169; color: white; }
+        .checkbox-btn.selected.a-favor::after { content: "✓"; font-size: 13px; font-weight: 900; line-height: 1; }
+        
+        .checkbox-btn.selected.en-contra { background-color: #e53e3e; border-color: #e53e3e; color: white; }
+        .checkbox-btn.selected.en-contra::after { content: "✗"; font-size: 13px; font-weight: 900; line-height: 1; }
+
+        .option-text { flex-grow: 1; font-size: 9.5px; line-height: 1.15; transition: font-size 0.2s; }
+        .option-text strong { color: #1a365d; }
+        .option-against .option-text { color: #9b2c2c; }
+
+        .texto-en-contra { color: #9b2c2c; font-weight: bold; }
+        .texto-a-favor { color: #1a365d; font-weight: bold; }
+        
+        input[type="text"] {
+            border: none; border-bottom: 1px dashed #999; background: transparent;
+            font-family: inherit; font-size: 9px; color: #333; width: 40px;
+            text-align: center; margin: 0 1px;
+        }
+        input[type="text"]:focus { outline: none; border-bottom: 1px solid #2b6cb0; }
+
+        /* Área de firmas */
+        .signature-area { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-top: 15px; 
+            padding-top: 10px; 
+        }
+        
+        .signature-box { 
+            width: 46%; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+        
+        .signature-input {
+            width: 100%;
+            min-height: 20px; 
+            border: none;
+            border-bottom: 1.5px solid #333;
+            background: transparent;
+            font-family: inherit;
+            font-size: 14px;
+            color: #333;
+            text-align: center;
+            margin-bottom: 4px;
+            padding: 3px;
+            white-space: nowrap; 
+            overflow: visible;
+            outline: none;
+            box-sizing: border-box; 
+        }
+
+        .signature-input:focus {
+            border-bottom: 2px solid #2b6cb0;
+            background-color: #f7fafc;
+        }
+
+        .signature-input:empty::before {
+            content: attr(data-placeholder);
+            color: #a0aec0;
+            pointer-events: none;
+            display: block; 
+        }
+
+        .signature-label { 
+            font-size: 10px; 
+            color: #555; 
+            font-weight: bold; 
+            text-align: center;
+        }
+
+        .legal-footer { margin-top: 5px; padding-top: 3px; border-top: 1px dashed #cbd5e0; font-size: 7px; color: #555; text-align: justify; line-height: 1.1; }
+        
+        .nota-importante {
+            background-color: #fffaf0; border: 1px solid #ecc94b; padding: 4px;
+            margin-top: 5px; font-size: 8px; color: #744210; border-radius: 4px; font-weight: bold; text-align: justify;
+        }
+
+        tr { page-break-inside: avoid; }
+        
+        /* --- REGLAS EXCLUSIVAS PARA IMPRESIÓN (PDF) --- */
+        @media print { 
+            body { 
+                background-color: white; 
+                font-size: 9.5px;
+            }
+            .contenedor-principal { 
+                max-width: 100%; 
+                margin: 0; 
+                padding: 0; 
+                box-shadow: none; 
+            }
+            .btn-container { display: none !important; } 
+            
+            /* Forzar quitar fondos de color en las casillas al imprimir */
+            .checkbox-btn {
+                background-color: transparent !important;
+                border-color: #333 !important;
+                color: transparent;
+            }
+            
+            /* Hacer las palomitas y taches negros sin fondo */
+            .checkbox-btn.selected.a-favor { 
+                background-color: transparent !important; 
+                border-color: #333 !important; 
+                color: #000 !important; 
+            }
+            .checkbox-btn.selected.en-contra { 
+                background-color: transparent !important; 
+                border-color: #333 !important; 
+                color: #000 !important; 
+            }
+            
+            /* Palomita y tache en Bold negro */
+            .checkbox-btn.selected.a-favor::after { 
+                content: "✓"; 
+                font-size: 15px; 
+                font-weight: 900; 
+                color: #000; 
+            }
+            .checkbox-btn.selected.en-contra::after { 
+                content: "✗"; 
+                font-size: 15px; 
+                font-weight: 900; 
+                color: #000; 
+            }
+            
+            /* Asegurar que los textos no se corten */
+            .vote-option.seleccionado .option-text {
+                font-size: 10px;
+            }
+            
+            .signature-input {
+                border-bottom: 1.5px solid #000 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="contenedor-principal">
+
+        <div class="btn-container" id="action-buttons">
+            <button class="btn-accion btn-imprimir" onclick="window.print()">🖨️ Imprimir o Guardar PDF</button>
+            <button class="btn-accion btn-pdf" id="btnPreparar" onclick="prepararPDF()">⚙️ Preparar Notas Acrobat</button>
+        </div>
+
+        <div class="header">
+            <h1>Guía de Votación - Asamblea General</h1>
+            <p>Fecha: ____ / ____ / 2026</p>
+        </div>
+
+        <div class="instructions">
+            <strong>Instrucciones:</strong> Haga clic en las casillas para votar (Verde = A Favor, Rojo = No apruebo). En el Punto 2, al seleccionar un comité, los demás se tachan automáticamente; si quita todas las palomitas, se marcará la opción global de "No crear ninguno".
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 38%;">Punto del Orden del Día</th>
+                    <th style="width: 62%;">Opciones de Votación</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="topic-col">
+                        <span class="topic-title">2. Creación de Comités Vecinales</span>
+                        <span class="topic-desc">Aprobación de la creación de los comités de Ecología, Estética y Festividades, y Mediación. La participación es abierta a cualquier condómino o residente (poseedor) que tenga la voluntad de pertenecer (Art. 82 LPC-CDMX).</span>
+                        <span class="topic-cost">Costo: $0 (Sin impacto financiero)</span>
+                    </td>
+                    <td id="celda-comites">
+                        <div class="vote-option a-favor" onclick="toggleComiteVote(this, 0)">
+                            <div class="checkbox-btn"></div>
+                            <div class="option-text">
+                                <span class="texto-a-favor" id="prefijo-0">A Favor:</span> <span id="texto-0">Apruebo crear el Comité de Ecología.</span>
+                            </div>
+                        </div>
+                        <div class="vote-option a-favor" onclick="toggleComiteVote(this, 1)">
+                            <div class="checkbox-btn"></div>
+                            <div class="option-text">
+                                <span class="texto-a-favor" id="prefijo-1">A Favor:</span> <span id="texto-1">Apruebo crear el Comité de Estética y Festividades.</span>
+                            </div>
+                        </div>
+                        <div class="vote-option a-favor" onclick="toggleComiteVote(this, 2)">
+                            <div class="checkbox-btn"></div>
+                            <div class="option-text">
+                                <span class="texto-a-favor" id="prefijo-2">A Favor:</span> <span id="texto-2">Apruebo crear el Comité de Mediación.</span>
+                            </div>
+                        </div>
+                        <div class="vote-option en-contra" onclick="toggleComiteVote(this, 3)">
+                            <div class="checkbox-btn"></div>
+                            <div class="option-text">
+                                <strong>No apruebo:</strong> No crear ninguno de los comités.
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="topic-col">
+                        <span class="topic-title">3. Mantenimiento de fachada</span>
+                        <span class="topic-desc">Autorización para solicitar al menos 3 cotizaciones para el mantenimiento integral de la fachada (pintura de muros, herrería y resane), estableciendo un techo presupuestal para su ejecución directa.</span>
+                        <span class="topic-cost">Costo: A cotizar (sujeto a techo presupuestal)</span>
+                    </td>
+                    <td>
+                        <div class="vote-option a-favor" onclick="toggleSingleVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>A Favor:</strong> Autorizar solicitud de cotizaciones y ejecución con techo máximo de $<input type="text" placeholder="Monto"> MXN.</div></div>
+                        <div class="vote-option en-contra" onclick="toggleSingleVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>No apruebo:</strong> No autorizar la solicitud ni ejecución.</div></div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="topic-col">
+                        <span class="topic-title">4. Sensores de seguridad para portones</span>
+                        <span class="topic-desc">Aprobación de la cotización de Grossmann para la instalación de sensores de seguridad (fotoceldas) en los portones automáticos.</span>
+                        <span class="topic-cost">Costo cotizado: $16,000.00 MXN (IVA incl.)</span>
+                    </td>
+                    <td>
+                        <div class="vote-option a-favor" onclick="toggleSingleVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>A Favor:</strong> Aprobar la cotización de Grossmann.</div></div>
+                        <div class="vote-option en-contra" onclick="toggleSingleVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>No apruebo:</strong> No autorizar el gasto.</div></div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="topic-col">
+                        <span class="topic-title">5. Proyecto de Eficiencia Energética</span>
+                        <span class="topic-desc">Aprobación de la Fase 1 (Banco de Capacitores) y autorización para el análisis y ejecución futura de la Fase 2 (Paneles Solares), conforme al flujo de capital.</span>
+                        <span class="topic-cost">Costo est. F1: ~$30k | F2: $393,700 MXN</span>
+                    </td>
+                    <td>
+                        <div class="vote-option a-favor" onclick="toggleMultiVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>A Favor (Fase 1):</strong> Aprobar análisis costo-beneficio y ejecución del Banco de Capacitores, con techo máximo de $<input type="text" placeholder="Monto"> MXN.</div></div>
+                        <div class="vote-option a-favor" onclick="toggleMultiVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>A Favor (Fase 2):</strong> Autorizar análisis y ejecución futura de Paneles Solares.</div></div>
+                        <div class="vote-option en-contra" onclick="toggleMultiVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>No apruebo:</strong> No autorizar el proyecto.</div></div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="topic-col">
+                        <span class="topic-title">6. Impermeabilización de azotea</span>
+                        <span class="topic-desc">Aprobación del alcance técnico y autorización para contratar la impermeabilización, previa verificación de la superficie real con los proveedores cotizados.</span>
+                        <span class="topic-cost">Costo estimado: $140,000 MXN (Aprox.)</span>
+                    </td>
+                    <td>
+                        <div class="vote-option a-favor" onclick="toggleSingleVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>A Favor:</strong> Autorizar ejecución con techo máximo de $<input type="text" placeholder="Monto"> MXN (previa verificación).</div></div>
+                        <div class="vote-option en-contra" onclick="toggleSingleVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>No apruebo:</strong> No autorizar la contratación.</div></div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="topic-col">
+                        <span class="topic-title">7. Manejo de fondos: Protección del patrimonio y la cuenta bancaria</span>
+                        <span class="topic-desc">Análisis y votación para la constitución de la Asociación Civil (A.C.) sin fines de lucro o, en su defecto, la apertura de cuenta mancomunada para la administración de los recursos del condominio.</span>
+                        <span class="topic-cost">Costo estimado A.C.: ~$25,000 MXN</span>
+                    </td>
+                    <td>
+                        <div class="vote-option a-favor" onclick="toggleSingleVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>A Favor (Opción A):</strong> Abrir nueva cuenta a nombre de un condómino.</div></div>
+                        <div class="vote-option a-favor" onclick="toggleSingleVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>A Favor (Opción B):</strong> Constituir Asociación Civil sin fines de lucro <strong>(A.C.)</strong>, considerar mancomunidad de firmas digitales.</div></div>
+                        <div class="vote-option a-favor" onclick="toggleSingleVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>A Favor (Opción C):</strong> Cuenta de gastos a nombre del Administrador o un condómino + Cuenta de reserva (Mancomunada Digital con firmas digitales).</div></div>
+                        <div class="vote-option en-contra" onclick="toggleSingleVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>Opción D (No apruebo A, B ni C):</strong> Mantener estructura actual (Cuenta indistinta + pago de <strong>$2,500/mes</strong> por manejo de cuenta).</div></div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="topic-col">
+                        <span class="topic-title">8. Proyecto Integral de Protección Civil y Dictámenes Técnicos (PIPC)</span>
+                        <span class="topic-desc">Contratación de consultoría para elaboración, registro y seguimiento del PIPC, así como la gestión de los dictámenes obligatorios (estructural, eléctrico y de gas), Visto Bueno y capacitación.</span>
+                        <span class="topic-cost">Costo estimado: ~$100,000 MXN</span>
+                    </td>
+                    <td>
+                        <div class="vote-option a-favor" onclick="toggleSingleVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>A Favor:</strong> Autorizar la contratación del PIPC y dictámenes (solicitando 3 cotizaciones).</div></div>
+                        <div class="vote-option en-contra" onclick="toggleSingleVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>No apruebo:</strong> No autorizar el gasto.</div></div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="topic-col">
+                        <span class="topic-title">9. Atención a humedades en bodegas del Sótano 2</span>
+                        <span class="topic-desc">Instrucción para que el Dictamen Estructural (contratado en el Punto 8) incluya la revisión del Sótano 2, determine el origen del daño y defina la responsabilidad de la reparación. <em>(Si el Punto 8 se rechaza, la instrucción al DRO queda sin efecto).</em></span>
+                        <span class="topic-cost">Costo extra: $0 (Incluido en PIPC)</span>
+                    </td>
+                    <td>
+                        <div class="vote-group" style="margin-bottom: 4px;">
+                            <div class="vote-option a-favor" onclick="toggleIndependentVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>A Favor (Contención):</strong> Aprobar la solución de contención para 6 bodegas por un costo de <strong>$61,120.86 MXN</strong> (IVA incl.).</div></div>
+                            <div class="vote-option en-contra" onclick="toggleIndependentVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>No apruebo:</strong> El gasto de $61,120.86 para 6 bodegas.</div></div>
+                        </div>
+                        
+                        <div class="vote-group">
+                            <div class="vote-option a-favor" onclick="toggleIndependentVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>A Favor (Evaluar):</strong> Instruir al DRO a evaluar las bodegas del Sótano 2 dentro del dictamen estructural del PIPC.</div></div>
+                            <div class="vote-option en-contra" onclick="toggleIndependentVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>No apruebo:</strong> No incluir la revisión dentro del dictamen.</div></div>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="topic-col">
+                        <span class="topic-title">10. Aprobación de Intereses Moratorios y Pena Convencional</span>
+                        <span class="topic-desc">Aprobación de lineamientos para el cobro de adeudos (Art. 33, fracc. V y 59 LPC-CDMX; Art. 24 del Reglamento Interno).</span>
+                    </td>
+                    <td>
+                        <div class="vote-option a-favor" onclick="toggleSingleVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>A Favor:</strong> Aprobar interés moratorio del <input type="text" placeholder="%"> % anual (9% tope máximo legal) y <input type="text" placeholder="%"> % de pena convencional.</div></div>
+                        <div class="vote-option en-contra" onclick="toggleSingleVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>No apruebo:</strong> No autorizar los lineamientos de cobro.</div></div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="topic-col">
+                        <span class="topic-title">11. Mantenimiento mayor de elevadores (Fase 2)</span>
+                        <span class="topic-desc">Aprobación de la cotización presentada por ELEBETA para el mantenimiento correctivo mayor.</span>
+                        <span class="topic-cost">Costo cotizado: $59,940.00 MXN</span>
+                    </td>
+                    <td>
+                        <div class="vote-option a-favor" onclick="toggleSingleVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>A Favor:</strong> Aprobar la cotización de ELEBETA.</div></div>
+                        <div class="vote-option en-contra" onclick="toggleSingleVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>No apruebo:</strong> No autorizar el gasto.</div></div>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="topic-col">
+                        <span class="topic-title">12. Obra mayor: Cambio de piso en Roof Garden</span>
+                        <span class="topic-desc">Formalización del proyecto aprobado (Piso Interceramic Roverello Café), actualización de costos y aprobación de las bases del concurso para la selección del contratista, exigiendo supervisión técnica (DRO) y transparencia en el proceso.</span>
+                        <span class="topic-cost">Costo base (Dic 2025): $484,280.42 MXN</span>
+                    </td>
+                    <td>
+                        <div class="vote-option a-favor" onclick="toggleSingleVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>A Favor:</strong> Formalizar proyecto, actualizar costos y aprobar bases del concurso.</div></div>
+                        <div class="vote-option en-contra" onclick="toggleSingleVote(this)"><div class="checkbox-btn"></div><div class="option-text"><strong>No apruebo:</strong> Detener el proyecto.</div></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="signature-area">
+            <div class="signature-box">
+                <div class="signature-input" contenteditable="true" data-placeholder="Nombre"></div>
+                <span class="signature-label">Nombre y Firma del Condómino</span>
+            </div>
+            <div class="signature-box">
+                <div class="signature-input" contenteditable="true" data-placeholder="Ej. Depto. 000 / 2.5%"></div>
+                <span class="signature-label">Departamento / Porcentaje de indiviso</span>
+            </div>
+        </div>
+
+        <div class="nota-importante">
+            Recuerde que este documento es una guía y no sustituye la votación exclusiva para condóminos no morosos, representantes legales o representantes con carta poder simple que acrediten la propiedad el día de la Asamblea General.
+        </div>
+
+        <div class="legal-footer">
+            <strong>Nota legal complementaria:</strong> Conforme a la Ley de Propiedad en Condominio de la CDMX, el derecho a voto es exclusivo para los condóminos que se encuentren al corriente en sus cuotas. Los condóminos morosos conservan su derecho a voz, pero no a voto (Art. 34 y 42, LPC-CDMX).
+        </div>
+
+    </div> 
+
+    <script>
+        function toggleComiteVote(element, index) {
+            if (event.target.tagName.toLowerCase() === 'input') return;
+
+            const parentCell = document.getElementById('celda-comites');
+            const allOptions = parentCell.querySelectorAll('.vote-option');
+            const checkboxes = parentCell.querySelectorAll('.checkbox-btn');
+            const clickedCheckbox = element.querySelector('.checkbox-btn');
+
+            if (index === 3) {
+                if (clickedCheckbox.classList.contains('en-contra')) {
+                    checkboxes.forEach(cb => cb.classList.remove('selected', 'a-favor', 'en-contra'));
+                    allOptions.forEach(opt => opt.classList.remove('seleccionado'));
+                } else {
+                    checkboxes.forEach(cb => cb.classList.remove('selected', 'a-favor', 'en-contra'));
+                    allOptions.forEach(opt => opt.classList.remove('seleccionado'));
+                    clickedCheckbox.classList.add('selected', 'en-contra');
+                    element.classList.add('seleccionado');
+                }
+                actualizarTextos();
+                return;
+            }
+
+            if (clickedCheckbox.classList.contains('a-favor')) {
+                clickedCheckbox.classList.remove('selected', 'a-favor');
+                element.classList.remove('seleccionado');
+            } else {
+                clickedCheckbox.classList.remove('en-contra');
+                clickedCheckbox.classList.add('selected', 'a-favor');
+                element.classList.add('seleccionado');
+            }
+
+            const comiteCheckboxes = Array.from(checkboxes).slice(0, 3);
+            const hasAnyAprobado = comiteCheckboxes.some(cb => cb.classList.contains('a-favor'));
+
+            if (hasAnyAprobado) {
+                comiteCheckboxes.forEach((cb) => {
+                    if (!cb.classList.contains('a-favor')) {
+                        cb.classList.add('selected', 'en-contra');
+                        cb.closest('.vote-option').classList.add('seleccionado');
+                    } else {
+                        cb.classList.remove('en-contra');
+                    }
+                });
+                checkboxes[3].classList.remove('selected', 'en-contra');
+                allOptions[3].classList.remove('seleccionado');
+            } else {
+                comiteCheckboxes.forEach(cb => {
+                    cb.classList.remove('selected', 'en-contra');
+                    cb.closest('.vote-option').classList.remove('seleccionado');
+                });
+                checkboxes[3].classList.add('selected', 'en-contra');
+                allOptions[3].classList.add('seleccionado');
+            }
+
+            actualizarTextos();
+        }
+
+        function actualizarTextos() {
+            for (let i = 0; i < 3; i++) {
+                const checkbox = document.querySelectorAll('#celda-comites .checkbox-btn')[i];
+                const prefijo = document.getElementById(`prefijo-${i}`);
+                const texto = document.getElementById(`texto-${i}`);
+
+                if (checkbox.classList.contains('a-favor')) {
+                    prefijo.textContent = "A Favor:";
+                    prefijo.className = "texto-a-favor";
+                    texto.textContent = texto.textContent.replace("No apruebo crear", "Apruebo crear");
+                } else if (checkbox.classList.contains('en-contra')) {
+                    prefijo.textContent = "En contra:";
+                    prefijo.className = "texto-en-contra";
+                    texto.textContent = texto.textContent.replace("Apruebo crear", "No apruebo crear");
+                } else {
+                    prefijo.textContent = "A Favor:";
+                    prefijo.className = "texto-a-favor";
+                    texto.textContent = texto.textContent.replace("No apruebo crear", "Apruebo crear");
+                }
+            }
+        }
+
+        function toggleSingleVote(element) {
+            if (event.target.tagName.toLowerCase() === 'input') return;
+            const checkbox = element.querySelector('.checkbox-btn');
+            if (checkbox.classList.contains('selected')) {
+                checkbox.classList.remove('selected', 'a-favor', 'en-contra');
+                element.classList.remove('seleccionado');
+            } else {
+                const parentCell = element.closest('td');
+                parentCell.querySelectorAll('.checkbox-btn').forEach(cb => {
+                    cb.classList.remove('selected', 'a-favor', 'en-contra');
+                    cb.closest('.vote-option').classList.remove('seleccionado');
+                });
+                if (element.classList.contains('a-favor')) {
+                    checkbox.classList.add('selected', 'a-favor');
+                } else {
+                    checkbox.classList.add('selected', 'en-contra');
+                }
+                element.classList.add('seleccionado');
+            }
+        }
+
+        function toggleMultiVote(element) {
+            if (event.target.tagName.toLowerCase() === 'input') return;
+            const checkbox = element.querySelector('.checkbox-btn');
+            const parentCell = element.closest('td');
+            const isEnContra = element.classList.contains('en-contra');
+
+            if (checkbox.classList.contains('selected')) {
+                checkbox.classList.remove('selected', 'a-favor', 'en-contra');
+                element.classList.remove('seleccionado');
+                return;
+            }
+
+            if (isEnContra) {
+                parentCell.querySelectorAll('.checkbox-btn').forEach(cb => {
+                    cb.classList.remove('selected', 'a-favor', 'en-contra');
+                    cb.closest('.vote-option').classList.remove('seleccionado');
+                });
+                checkbox.classList.add('selected', 'en-contra');
+                element.classList.add('seleccionado');
+            } else {
+                parentCell.querySelectorAll('.vote-option.en-contra').forEach(enContra => {
+                    enContra.querySelector('.checkbox-btn').classList.remove('selected', 'a-favor', 'en-contra');
+                    enContra.classList.remove('seleccionado');
+                });
+                checkbox.classList.add('selected', 'a-favor');
+                element.classList.add('seleccionado');
+            }
+        }
+
+        function toggleIndependentVote(element) {
+            if (event.target.tagName.toLowerCase() === 'input') return;
+            const checkbox = element.querySelector('.checkbox-btn');
+            if (checkbox.classList.contains('selected')) {
+                checkbox.classList.remove('selected', 'a-favor', 'en-contra');
+                element.classList.remove('seleccionado');
+            } else {
+                const group = element.closest('.vote-group');
+                group.querySelectorAll('.checkbox-btn').forEach(cb => {
+                    cb.classList.remove('selected', 'a-favor', 'en-contra');
+                    cb.closest('.vote-option').classList.remove('seleccionado');
+                });
+                if (element.classList.contains('a-favor')) {
+                    checkbox.classList.add('selected', 'a-favor');
+                } else {
+                    checkbox.classList.add('selected', 'en-contra');
+                }
+                element.classList.add('seleccionado');
+            }
+        }
+
+        function prepararPDF() {
+            var btn = document.getElementById('btnPreparar');
+            btn.classList.add('oculto');
+            try {
+                this.syncAnnotScan();
+                var annots = this.getAnnots();
+                if (annots != null) {
+                    for (var i in annots) {
+                        var annot = annots[i];
+                        if (annot.type == "Text") {
+                            var r = annot.rect;
+                            var width = r[2] - r[0];
+                            var height = r[3] - r[1];
+                            r[2] += width;
+                            r[1] -= height;
+                            annot.rect = r;
+                        }
+                    }
+                }
+                alert("✅ ¡Listo! Ahora presiona 'Imprimir o Guardar PDF' y guarda el archivo. Las notas adhesivas que agregues en Acrobat serán del doble de tamaño.");
+            } catch (e) {
+                alert("⚠️ Guarda este documento como PDF primero y ábrelo en Adobe Acrobat para agrandar las notas. Puedes usar el botón 'Imprimir o Guardar PDF'.");
+            }
+        }
+    </script>
+</body>
+</html>
